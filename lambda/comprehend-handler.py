@@ -14,7 +14,7 @@ def lambda_handler(event, context):
     # input = json.dumps(event['body'])
     # input = json.loads(input)
     print(event)
-    input = json.loads(event['input'])
+    input = json.dumps(event['input'])
     print(input)
     req = {
         "messageVersion": "1.0",
