@@ -58,10 +58,10 @@ class GateWayStepFunction(Stack):
             comment='AWS Batch Job succeeded'
         )
 
-        definition = comprehend_job\
-            .next(aws_stepfunctions.Choice(self, 'Job Complete?')
-                  .when(aws_stepfunctions.Condition.string_equals('$.status', 'FAILED'), fail_job)
-                  .when(aws_stepfunctions.Condition.string_equals('$.status', 'SUCCEEDED'), succeed_job))
+        definition = comprehend_job  # \
+        # .next(aws_stepfunctions.Choice(self, 'Job Complete?')
+        #      .when(aws_stepfunctions.Condition.string_equals('$.status', 'FAILED'), fail_job)
+        #      .when(aws_stepfunctions.Condition.string_equals('$.status', 'SUCCEEDED'), succeed_job))
 
         sm = aws_stepfunctions.StateMachine(
             self, "StateMachine",
@@ -102,9 +102,13 @@ class GateWayStepFunction(Stack):
 
         sf_options = aws_apigateway.IntegrationOptions(
             credentials_role=apigw_step_role,
+            integration_responses=[
+                aws_apigateway.IntegrationResponse(
+                    status_code="200"
+                )
+            ],
             request_templates={
                 "application/json": json.dumps({
-                    # {"S": "$input.path('$.message')"},
                     "input": json.dumps({"input": "$input.path('$.message')"}),
                     "stateMachineArn": "{}".format(sm.state_machine_arn)
                 })
@@ -118,8 +122,13 @@ class GateWayStepFunction(Stack):
             integration_http_method='POST',
             options=sf_options,
         )
-
-        all_resources.add_method('POST', integration=create_integration)
+        method_responses = [
+            aws_apigateway.MethodResponse(status_code='200'),
+            aws_apigateway.MethodResponse(status_code='400'),
+            aws_apigateway.MethodResponse(status_code='500')
+        ]
+        all_resources.add_method(
+            'POST', integration=create_integration, method_responses=method_responses)
 
 
 app = aws_cdk.App()
