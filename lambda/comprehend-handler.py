@@ -1,11 +1,8 @@
-import os
 import boto3
 import json
 
 ESCALATION_INTENT_MESSAGE = "Seems that you are having troubles with our service. Would you like to be transferred to the associate?"
 FULFILMENT_CLOSURE_MESSAGE = "No Problem"
-
-escalation_intent_name = os.getenv('ESCALATION_INTENT_NAME', None)
 
 client = boto3.client('comprehend')
 
