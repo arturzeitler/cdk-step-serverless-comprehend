@@ -100,6 +100,27 @@ class GateWayStepFunction(Stack):
                                        },
                                        )
 
+        get_response_templates = '''
+            #set($inputRoot = $input.path('$'))
+            {
+            "comments": [
+                #foreach($elem in $inputRoot.Items) {
+                "commentId": "$elem.sentiment.S",
+                }#if($foreach.hasNext),#end
+                #end
+            ]
+            }'''
+
+        integration_responses = [
+            aws_apigateway.IntegrationResponse(
+                status_code="200",
+                response_templates={
+                    'application/json': get_response_templates
+                }
+            ),
+            # *apigw_error_responses
+        ]
+
         sf_options = aws_apigateway.IntegrationOptions(
             credentials_role=apigw_step_role,
             integration_responses=[
