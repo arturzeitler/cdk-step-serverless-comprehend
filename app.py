@@ -170,7 +170,11 @@ class GateWayStepFunction(Stack):
             ],
             request_templates={
                 "application/json": json.dumps({
-                    "input": json.dumps({"input": "$input.path('$.message')"}),
+                    "TableName": table_name,
+                    "input": json.dumps({
+                        "id": "$input.path('$.id')",
+                        "message": "$input.path('$.message')"
+                    }),
                     "stateMachineArn": "{}".format(sm.state_machine_arn)
                 })
             }

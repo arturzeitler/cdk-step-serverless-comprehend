@@ -8,9 +8,9 @@ client = boto3.client('comprehend')
 
 
 def lambda_handler(event, context):
-    input = json.dumps(event['input'])
+    input = json.dumps(event['message'])
     sentiment = client.detect_sentiment(
-        Text=event['input'], LanguageCode='en')['Sentiment']
+        Text=input, LanguageCode='en')['Sentiment']
     if sentiment == 'NEGATIVE':
         event['sentiment'] = ESCALATION_INTENT_MESSAGE
     else:
