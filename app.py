@@ -5,6 +5,7 @@ from aws_cdk import (
     Stack,
     Duration,
     aws_lambda,
+    aws_dynamodb,
     aws_iam,
     aws_apigateway,
     aws_stepfunctions,
@@ -17,6 +18,19 @@ from constructs import Construct
 class GateWayStepFunction(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
+
+        table_name = 'Sentiment'
+
+        dynamo_table = aws_dynamodb.Table(self, "DynamoDbTable",
+                                          table_name=table_name,
+                                          removal_policy=aws_cdk.RemovalPolicy.DESTROY,
+                                          partition_key=aws_dynamodb.Attribute(name="id",
+                                                                               type=aws_dynamodb.AttributeType.STRING),
+                                          time_to_live_attribute="ttl",
+                                          billing_mode=aws_dynamodb.BillingMode.PROVISIONED,
+                                          read_capacity=2,
+                                          write_capacity=2,
+                                          )
 
         comprehend_policy = aws_iam.PolicyStatement(
             actions=[
@@ -41,6 +55,22 @@ class GateWayStepFunction(Stack):
                                                        5),
                                                    initial_policy=[comprehend_policy])
 
+        dynamo_job = aws_stepfunctions_tasks.DynamoPutItem(
+            self, "Dynamo Job",
+            item={
+                'id': aws_stepfunctions_tasks.DynamoAttributeValue.from_string(
+                    aws_stepfunctions.JsonPath.string_at('$.id')
+                ),
+                'message': aws_stepfunctions_tasks.DynamoAttributeValue.from_string(
+                    aws_stepfunctions.JsonPath.string_at('$.message')
+                ),
+                'sentiment': aws_stepfunctions_tasks.DynamoAttributeValue.from_string(
+                    aws_stepfunctions.JsonPath.string_at('$.sentiment')
+                )
+            },
+            table=dynamo_table
+        )
+
         comprehend_job = aws_stepfunctions_tasks.LambdaInvoke(
             self, "Submit Job",
             lambda_function=comprehend_lambda_fn,
@@ -58,7 +88,7 @@ class GateWayStepFunction(Stack):
             comment='AWS Batch Job succeeded'
         )
 
-        definition = comprehend_job  # \
+        definition = comprehend_job.next(dynamo_job)  # \
         # .next(aws_stepfunctions.Choice(self, 'Job Complete?')
         #      .when(aws_stepfunctions.Condition.string_equals('$.status', 'FAILED'), fail_job)
         #      .when(aws_stepfunctions.Condition.string_equals('$.status', 'SUCCEEDED'), succeed_job))
@@ -71,6 +101,16 @@ class GateWayStepFunction(Stack):
         )
 
         sf_access_policy_doc = aws_iam.PolicyDocument()
+
+        sf_access_policy_doc.add_statements(aws_iam.PolicyStatement(**{
+            "effect": aws_iam.Effect.ALLOW,
+            "resources": [dynamo_table.table_arn],
+            "actions": [
+                "dynamodb:BatchWriteItem",
+                "dynamodb:PutItem",
+            ]
+        }))
+
         sf_access_policy_doc.add_statements(aws_iam.PolicyStatement(**{
             "effect": aws_iam.Effect.ALLOW,
             "resources": [comprehend_lambda_fn.function_arn],
