@@ -59,16 +59,18 @@ class GateWayStepFunction(Stack):
             self, "Dynamo Job",
             item={
                 'id': aws_stepfunctions_tasks.DynamoAttributeValue.from_string(
-                    aws_stepfunctions.JsonPath.string_at('$.id')
+                    aws_stepfunctions.JsonPath.string_at('$.id.S')
                 ),
                 'message': aws_stepfunctions_tasks.DynamoAttributeValue.from_string(
-                    aws_stepfunctions.JsonPath.string_at('$.message')
+                    aws_stepfunctions.JsonPath.string_at('$.message.S')
                 ),
                 'sentiment': aws_stepfunctions_tasks.DynamoAttributeValue.from_string(
-                    aws_stepfunctions.JsonPath.string_at('$.sentiment')
+                    aws_stepfunctions.JsonPath.string_at('$.sentiment.S')
                 )
             },
-            table=dynamo_table
+            table=dynamo_table,
+            result_path=aws_stepfunctions.JsonPath.string_at(
+                '$.output_from_ddb_put'),
         )
 
         comprehend_job = aws_stepfunctions_tasks.LambdaInvoke(
@@ -143,12 +145,7 @@ class GateWayStepFunction(Stack):
         get_response_templates = '''
             #set($inputRoot = $input.path('$'))
             {
-            "comments": [
-                #foreach($elem in $inputRoot.Items) {
-                "commentId": "$elem.sentiment.S",
-                }#if($foreach.hasNext),#end
-                #end
-            ]
+            "Sentiment": $input.path('$.output_from_ddb_put')
             }'''
 
         apigw_error_responses = [
@@ -179,8 +176,12 @@ class GateWayStepFunction(Stack):
                 "application/json": json.dumps({
                     "TableName": table_name,
                     "input": json.dumps({
-                        "id": "$input.path('$.id')",
-                        "message": "$input.path('$.message')"
+                        "id": {
+                            "S": "$input.path('$.id')"
+                        },
+                        "message": {
+                            "S": "$input.path('$.message')"
+                        }
                     }),
                     "stateMachineArn": "{}".format(sm.state_machine_arn)
                 })
