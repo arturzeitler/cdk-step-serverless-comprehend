@@ -151,23 +151,30 @@ class GateWayStepFunction(Stack):
             ]
             }'''
 
-        integration_responses = [
+        apigw_error_responses = [
+            aws_apigateway.IntegrationResponse(
+                status_code="400", selection_pattern="4\d{2}"),
+            aws_apigateway.IntegrationResponse(
+                status_code="500", selection_pattern="5\d{2}")
+        ]
+
+        apigw_ok_responses = [
             aws_apigateway.IntegrationResponse(
                 status_code="200",
                 response_templates={
                     'application/json': get_response_templates
                 }
-            ),
-            # *apigw_error_responses
+            )
+        ]
+
+        integration_responses = [
+            *apigw_ok_responses,
+            *apigw_error_responses
         ]
 
         sf_options = aws_apigateway.IntegrationOptions(
             credentials_role=apigw_step_role,
-            integration_responses=[
-                aws_apigateway.IntegrationResponse(
-                    status_code="200"
-                )
-            ],
+            integration_responses=integration_responses,
             request_templates={
                 "application/json": json.dumps({
                     "TableName": table_name,
@@ -178,7 +185,6 @@ class GateWayStepFunction(Stack):
                     "stateMachineArn": "{}".format(sm.state_machine_arn)
                 })
             }
-            # passthrough_behavior=aws_apigateway.PassthroughBehavior.WHEN_NO_TEMPLATES
         )
 
         create_integration = aws_apigateway.AwsIntegration(
