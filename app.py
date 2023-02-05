@@ -10,6 +10,7 @@ from aws_cdk import (
     aws_apigateway,
     aws_stepfunctions,
     aws_stepfunctions_tasks,
+    CfnOutput,
 )
 import aws_cdk
 from constructs import Construct
@@ -79,21 +80,7 @@ class GateWayStepFunction(Stack):
             output_path="$.Payload",
         )
 
-        fail_job = aws_stepfunctions.Fail(
-            self, "Fail",
-            cause='AWS Batch Job Failed',
-            error='DescribeJob returned FAILED'
-        )
-
-        succeed_job = aws_stepfunctions.Succeed(
-            self, "Succeeded",
-            comment='AWS Batch Job succeeded'
-        )
-
-        definition = comprehend_job.next(dynamo_job)  # \
-        # .next(aws_stepfunctions.Choice(self, 'Job Complete?')
-        #      .when(aws_stepfunctions.Condition.string_equals('$.status', 'FAILED'), fail_job)
-        #      .when(aws_stepfunctions.Condition.string_equals('$.status', 'SUCCEEDED'), succeed_job))
+        definition = comprehend_job.next(dynamo_job)
 
         sm = aws_stepfunctions.StateMachine(
             self, "StateMachine",
@@ -204,8 +191,25 @@ class GateWayStepFunction(Stack):
         ]
         all_resources.add_method(
             'POST', integration=create_integration, method_responses=method_responses)
+        
+        CfnOutput(self, "LambdaFunctionName",
+                  value=comprehend_lambda_fn.function_name,
+                  export_name='FunctionName',
+                  description='Function name')
+
+        CfnOutput(self, "database arn",
+                  value=dynamo_table.table_arn,
+                  export_name='DynamoDbArn',
+                  description='DynamoDBArn')
+
+        CfnOutput(self, "step functions arn",
+                  value=sm.state_machine_arn,
+                  export_name='StepFunctionArn',
+                  description='StepFunctionArn')
 
 
 app = aws_cdk.App()
-GateWayStepFunction(app, "GateWayStepFunction")
+GateWayStepFunction(app, "GateWayStepFunction", env=aws_cdk.Environment(
+    account=os.getenv('CDK_DEFAULT_ACCOUNT'),
+    region=os.getenv('CDK_DEFAULT_REGION')))
 app.synth()
