@@ -1,6 +1,6 @@
 # Api Gateway, Lambda, DynamoDB, Step Function
 
-Simple serverless endpoint that call Api Gateway which triggers a state machine that invokes a lambda calling AWS Comprehend to get sentiment of provided message and stores message and sentiment in DynamoDB table before returning sentiment to user.
+Simple serverless endpoint that calls Api Gateway which triggers a state machine that invokes a lambda calling AWS Comprehend to get sentiment of the provided message and stores message and sentiment in a DynamoDB table before returning sentiment to the user.
 
 readme to be completed
 
