@@ -143,10 +143,13 @@ class GateWayStepFunction(Stack):
                                        )
 
         get_response_templates = '''
-            #set($inputRoot = $input.path('$'))
+            #set($inputRoot = $input.path('$.output'))
             {
-            "Sentiment": $input.path('$.output_from_ddb_put')
-            }'''
+            "httpStatusCode": $util.parseJson($inputRoot).output_from_ddb_put.SdkHttpMetadata.HttpStatusCode,
+            "Message": $util.parseJson($inputRoot).message.S,
+            "Sentiment": $util.parseJson($inputRoot).sentiment.S
+            }
+            '''
 
         apigw_error_responses = [
             aws_apigateway.IntegrationResponse(
