@@ -117,8 +117,9 @@ class GateWayStepFunction(Stack):
             ]
         }))
 
-        api = aws_apigateway.StepFunctionsRestApi(self, "StepFunctionsRestApi",
-                                                  state_machine=sm)
+        api = aws_apigateway.RestApi(
+            self, "StepFunctionsRestApi"
+        )
         all_resources = api.root.add_resource("sentiment")
         apigw_step_role = aws_iam.Role(self, "ApiGatewayRoleForStepFunctions",
                                        role_name='APIGatewayRoleForStepFunctions',
@@ -191,7 +192,7 @@ class GateWayStepFunction(Stack):
         ]
         all_resources.add_method(
             'POST', integration=create_integration, method_responses=method_responses)
-        
+
         CfnOutput(self, "LambdaFunctionName",
                   value=comprehend_lambda_fn.function_name,
                   export_name='FunctionName',
