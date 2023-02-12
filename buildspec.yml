@@ -3,7 +3,7 @@ version: 0.2
 phases:
   install:
     commands:
-      - npm install -g npm@latest
+      - yum upgrade npm
       - npm install -g aws-cdk
       - pip install -r requirements.txt
   build:
