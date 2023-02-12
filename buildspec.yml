@@ -4,11 +4,12 @@ phases:
   install:
     commands:
       - yum upgrade npm
+      - yum upgrade node
       - npm install -g aws-cdk
       - pip install -r requirements.txt
   build:
     commands:
-      - echo deploymenz started
+      - echo deployment started
       - cdk synth
       - cdk deploy --require-approval never
   post_build:
