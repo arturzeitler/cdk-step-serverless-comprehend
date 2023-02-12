@@ -1,0 +1,17 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-version:
+      python: 3.9
+    commands:
+      pip install -r requirements.txt
+  build:
+    commands:
+      - echo deploymenz started
+      - cdk init
+      - cdk synth
+      - cdk deploy --require-approval never
+  post_build:
+    commands:
+      - echo deployment complete
