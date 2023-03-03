@@ -40,7 +40,7 @@ class CodePipeline(Stack):
             actions=[
                 aws_codepipeline_actions.GitHubSourceAction(
                     owner="ArturZ.",
-                    repo="CDK-Serverless",
+                    repo="cdk-step-serverless-comprehend",
                     branch="master",
                     action_name="CDK_Pipeline_Source",
                     oauth_token=SecretValue.secrets_manager("github-token"),
