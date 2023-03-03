@@ -1,4 +1,4 @@
 aws-cdk-lib==2.67.0
-constructs==11.0.0
+constructs==10.1.266
 boto3==1.26.41
 pytest==7.2.1
