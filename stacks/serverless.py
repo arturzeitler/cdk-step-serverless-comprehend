@@ -1,4 +1,5 @@
 import json
+import os
 
 from aws_cdk import (
     Stack,
@@ -10,6 +11,7 @@ from aws_cdk import (
     aws_stepfunctions,
     aws_stepfunctions_tasks,
     CfnOutput,
+    RemovalPolicy,
 )
 from constructs import Construct
 
@@ -22,7 +24,7 @@ class GateWayStepFunction(Stack):
 
         dynamo_table = aws_dynamodb.Table(self, "DynamoDbTable",
                                           table_name=table_name,
-                                          removal_policy=aws_cdk.RemovalPolicy.DESTROY,
+                                          removal_policy=RemovalPolicy.DESTROY,
                                           partition_key=aws_dynamodb.Attribute(name="id",
                                                                                type=aws_dynamodb.AttributeType.STRING),
                                           time_to_live_attribute="ttl",
@@ -48,9 +50,9 @@ class GateWayStepFunction(Stack):
                                                    function_name="ComprehendLambdaRestApi",
                                                    handler="comprehend-handler.lambda_handler",
                                                    description='Function that returns Sentiment from AWS Comprehend',
-                                                   code=aws_lambda.Code.from_asset(os.path.join(
-                                                       os.path.dirname(__file__), 'lambda')),
-                                                   timeout=aws_cdk.Duration.minutes(
+                                                   code=aws_lambda.Code.from_asset(
+                                                       'lambda'),
+                                                   timeout=Duration.minutes(
                                                        5),
                                                    initial_policy=[comprehend_policy])
 

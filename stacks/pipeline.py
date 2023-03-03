@@ -42,7 +42,7 @@ class CodePipeline(Stack):
                     owner="ArturZ.",
                     repo="CDK-Serverless",
                     branch="master",
-                    action_name="Pipeline Source",
+                    action_name="CDK_Pipeline_Source",
                     oauth_token=SecretValue.secrets_manager("github-token"),
                     output=source_output,
                 )
@@ -52,7 +52,7 @@ class CodePipeline(Stack):
             stage_name="Build",
             actions=[
                 aws_codepipeline_actions.CodeBuildAction(
-                    action_name="CDK_Build",
+                    action_name="CDK_Pipeline_Build",
                     input=source_output,
                     outputs=[
                         build_output
