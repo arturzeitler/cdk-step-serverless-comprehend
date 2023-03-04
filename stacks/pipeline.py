@@ -4,6 +4,7 @@ from aws_cdk import (
     aws_codepipeline,
     aws_codepipeline_actions,
     SecretValue,
+    aws_iam,
 )
 
 from constructs import Construct
@@ -48,6 +49,20 @@ class CodePipeline(Stack):
                 )
             ]
         )
+
+        codebuild_role = aws_iam.Role(
+            self,
+            "CDKCodeBuildRole",
+            assumed_by=aws_iam.ServicePrincipal("codebuild.amazonaws.com")
+        )
+        cf_policy = aws_iam.ManagedPolicy.from_managed_policy_arn(
+            self,
+            "CloudFormationRead",
+            "arn:aws:iam::aws:policy/AWSCloudFormationReadOnlyAccess"
+        )
+        codebuild_role.add_managed_policy(
+            cf_policy
+        )
         pipeline.add_stage(
             stage_name="Build",
             actions=[
@@ -65,7 +80,8 @@ class CodePipeline(Stack):
                         ),
                         build_spec=aws_codebuild.BuildSpec.from_source_filename(
                             "buildspec.yml"
-                        )
+                        ),
+                        role=codebuild_role
                     )
                 )
             ]
