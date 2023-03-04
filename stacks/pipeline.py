@@ -14,16 +14,10 @@ class CodePipeline(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
         """
-        pipeline = CodePipeline(self, "Pipeline",
-                                pipeline_name="MyPipeline",
-                                synth=aws_codepipeline.ShellStep("Synth",
-                                                                 input=aws_codepipeline.CodePipelineSource.git_hub(
-                                                                     "https://github.com/arturzeitler/cdk-step-serverless-comprehend", "master"),
-                                                                 commands=["npm install -g aws-cdk",
-                                                                           "python -m pip install -r requirements.txt",
-                                                                           "cdk synth"]
-                                                                 )
-                                )
+        Building assets failed: Error: Building Assets Failed: Error: GateWayStepFunction: 
+        User: arn:aws:sts::834458757077:assumed-role/CodePipeline-CDKCodeBuildRole4884F95D-AXNNMP5FM8KY/AWSCodeBuild-a37471a5-d047-457a-9fca-8ab67ac6afea is 
+        not authorized to perform: ssm:GetParameter on resource: arn:aws:ssm:eu-central-1:834458757077:parameter/cdk-bootstrap/hnb659fds/version because no 
+        identity-based policy allows the ssm:GetParameter action
         """
         pipeline = aws_codepipeline.Pipeline(
             self,
@@ -60,8 +54,16 @@ class CodePipeline(Stack):
             "CloudFormationRead",
             "arn:aws:iam::aws:policy/AWSCloudFormationReadOnlyAccess"
         )
+        ssm_policy = aws_iam.ManagedPolicy.from_managed_policy_arn(
+            self,
+            "SSMGetParameter",
+            "arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess"
+        )
         codebuild_role.add_managed_policy(
             cf_policy
+        )
+        codebuild_role.add_managed_policy(
+            ssm_policy
         )
         pipeline.add_stage(
             stage_name="Build",
