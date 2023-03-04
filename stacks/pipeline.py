@@ -65,6 +65,18 @@ class CodePipeline(Stack):
         codebuild_role.add_managed_policy(
             ssm_policy
         )
+        codebuild_role.attach_inline_policy(
+            aws_iam.Policy(self, "AssumeRole",
+                           statements=[aws_iam.PolicyStatement(
+                               actions=[
+                                   "sts:AssumeRole",
+                                   "iam:PassRole"
+                               ],
+                               resources=["arn:aws:iam::*:role/cdk*"],
+                               effect=aws_iam.Effect.ALLOW
+                           )]
+                           )
+        )
         pipeline.add_stage(
             stage_name="Build",
             actions=[
